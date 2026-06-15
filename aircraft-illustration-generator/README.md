@@ -14,7 +14,9 @@ plus a matching JSON metadata file.
   in wherever `<name>` (or `<aircraft model>`, `[aircraft model]`,
   `{{aircraft_model}}`) appears.
 - `src/generate-aircraft-images.js` — the generator script.
-- `output/` — generated images and metadata.
+- `src/remove-background.js` — turns the rendered images into transparent PNGs.
+- `output/ai_gen/` — generated (opaque, white-background) images and metadata.
+- `output/transparent/` — background-removed, transparent versions.
 - `output_comparison/` — sample renders at different quality settings (see below).
 
 ## Prerequisites
@@ -75,6 +77,34 @@ Example — render the first 5 aircraft at high quality with 3 workers:
 ```bash
 OPENAI_IMAGE_QUALITY=high CONCURRENCY=3 LIMIT=5 \
   node src/generate-aircraft-images.js
+```
+
+## Removing backgrounds
+
+The rendered images sit on a pure white background. `remove-background.js`
+converts them to transparent PNGs. It's a zero-dependency script (Node's built-in
+`zlib` only): it decodes each PNG, flood-fills the white background inward from
+the image edges — so white paint *inside* the aircraft is preserved — feathers
+the silhouette edge, and re-encodes as RGBA.
+
+```bash
+cd aircraft-illustration-generator
+node src/remove-background.js                 # process every PNG in output/ai_gen/
+node src/remove-background.js a320.png b738.png   # only specific files
+```
+
+Inputs are read from `output/ai_gen/`; transparent results are written to
+`output/transparent/` with the same filenames.
+
+### Configuration
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `BG_THRESHOLD` | `240` | Min per-channel brightness (0–255) for a pixel to count as background. Lower removes more. |
+| `BG_FEATHER_BAND` | `40` | Width of the soft alpha edge below the threshold, in brightness levels. Set `0` for a hard edge. |
+
+```bash
+BG_THRESHOLD=235 BG_FEATHER_BAND=50 node src/remove-background.js
 ```
 
 ## Quality comparison
