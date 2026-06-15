@@ -1,11 +1,3 @@
-# IDE
-/.idea
+.idea/
 
-# Project
-/node_modules
-/dist
-
-# Secrets
-.env
-
-npm-debug.log*
+/**/.env

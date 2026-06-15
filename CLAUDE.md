@@ -17,7 +17,7 @@ It is deliberately a collection of **TypeScript scripts**, not a long-running ap
 Node 24 runs `.ts` files directly via native type stripping — **no build step, no ts-node, no bundler**.
 
 ```bash
-cp .env.example .env          # fill in FLIGHTS_EMAIL / FLIGHTS_PASSWORD (needs the "operations" role)
+cp .env.dist .env          # fill in FLIGHTS_EMAIL / FLIGHTS_PASSWORD (needs the "operations" role)
 npm run sync:operators        # dry-run: prints the create/update/skip plan, writes nothing
 npm run sync:operators -- --apply           # actually write to the API
 npm run sync:operators -- path/to/other.csv # use a different sheet
