@@ -1,0 +1,13 @@
+{
+  "name": "aircraft-illustration-generator",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node src/generate-aircraft-images.js",
+    "remove-bg": "node src/remove-background.js",
+    "postprocess": "node src/postprocess-images.js"
+  },
+  "dependencies": {
+    "sharp": "^0.34.4"
+  }
+}

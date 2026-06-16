@@ -15,8 +15,10 @@ plus a matching JSON metadata file.
   `{{aircraft_model}}`) appears.
 - `src/generate-aircraft-images.js` — the generator script.
 - `src/remove-background.js` — turns the rendered images into transparent PNGs.
+- `src/postprocess-images.js` — resizes the transparent PNGs into the icon and preview variants.
 - `output/ai_gen/` — generated (opaque, white-background) images and metadata.
 - `output/transparent/` — background-removed, transparent versions.
+- `output/postprocess/<icao>/` — resized icon/preview variants in AVIF, WebP and PNG, one subdirectory per aircraft.
 - `output_comparison/` — sample renders at different quality settings (see below).
 
 ## Prerequisites
@@ -100,12 +102,46 @@ Inputs are read from `output/ai_gen/`; transparent results are written to
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `BG_THRESHOLD` | `240` | Min per-channel brightness (0–255) for a pixel to count as background. Lower removes more. |
+| `BG_THRESHOLD` | `248` | Min per-channel brightness (0–255) for a pixel to count as background. Lower removes more; too low lets the fill leak into the (near-white) airframe. |
+| `BG_EDGE_DELTA` | `4` | Max luminance step to a neighbour for the fill to pass through a bright pixel. Stops the fill at faint white-on-white edges (tail tips, fuselage tops) so it can't eat into the airframe. |
 | `BG_FEATHER_BAND` | `40` | Width of the soft alpha edge below the threshold, in brightness levels. Set `0` for a hard edge. |
 
 ```bash
-BG_THRESHOLD=235 BG_FEATHER_BAND=50 node src/remove-background.js
+BG_THRESHOLD=245 BG_EDGE_DELTA=3 node src/remove-background.js
 ```
+
+## Postprocessing (icon & preview variants)
+
+`postprocess-images.js` resizes each transparent PNG into the sizes the app
+serves, in three formats. It uses [`sharp`](https://sharp.pixelplumbing.com),
+so install dependencies first:
+
+```bash
+cd aircraft-illustration-generator
+npm install
+npm run postprocess                              # process every PNG in output/transparent/
+node src/postprocess-images.js a320.png b738.png   # only specific files
+```
+
+For each input it writes 15 files to `output/postprocess/<icao>/` — five sizes,
+each as AVIF, WebP and PNG, named `<base>-<size>.<ext>`:
+
+| Size | Use |
+| --- | --- |
+| `icon-64x36`, `icon-128x72` | small table/list icons (1× and 2×) |
+| `600x338`, `1200x675` | standard preview (1× and 2×) |
+| `1800x1013` | extra-large preview (3×) |
+
+Images are resized with `fit: contain` onto a transparent canvas, so the 16:9
+silhouette is never cropped or stretched.
+
+### Configuration
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `AVIF_QUALITY` | `50` | AVIF quality (0–100). |
+| `WEBP_QUALITY` | `82` | WebP quality (0–100). |
+| `AVIF_EFFORT` | `4` | AVIF encoder effort (0–9). Higher is smaller but slower. |
 
 ## Quality comparison
 
