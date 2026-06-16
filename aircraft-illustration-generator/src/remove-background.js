@@ -7,8 +7,9 @@ const projectDir = path.resolve(import.meta.dirname, '..');
 const inDir = path.resolve(projectDir, 'output', 'ai_gen');
 const outDir = path.resolve(projectDir, 'output', 'transparent');
 
-const THRESHOLD = clamp(Math.round(Number(process.env.BG_THRESHOLD || '240')), 0, 255);
+const THRESHOLD = clamp(Math.round(Number(process.env.BG_THRESHOLD || '248')), 0, 255);
 const FEATHER_BAND = Math.max(0, Number(process.env.BG_FEATHER_BAND || '40'));
+const EDGE_DELTA = Math.max(0, Number(process.env.BG_EDGE_DELTA || '4'));
 
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
@@ -182,7 +183,24 @@ function featherEdges(width, height, rgba, threshold, band) {
   }
 }
 
-function removeBackground(width, height, rgba, threshold, band) {
+function luminance(rgba, idx) {
+  const o = idx * 4;
+  return (rgba[o] + rgba[o + 1] + rgba[o + 2]) / 3;
+}
+
+function maxNeighborStep(rgba, width, height, idx) {
+  const x = idx % width;
+  const y = (idx / width) | 0;
+  const lum = luminance(rgba, idx);
+  let step = 0;
+  if (x > 0) step = Math.max(step, Math.abs(lum - luminance(rgba, idx - 1)));
+  if (x < width - 1) step = Math.max(step, Math.abs(lum - luminance(rgba, idx + 1)));
+  if (y > 0) step = Math.max(step, Math.abs(lum - luminance(rgba, idx - width)));
+  if (y < height - 1) step = Math.max(step, Math.abs(lum - luminance(rgba, idx + width)));
+  return step;
+}
+
+function removeBackground(width, height, rgba, threshold, band, edgeDelta) {
   const total = width * height;
   const visited = new Uint8Array(total);
   const stack = [];
@@ -192,7 +210,8 @@ function removeBackground(width, height, rgba, threshold, band) {
   };
   const isBackground = idx => {
     const o = idx * 4;
-    return Math.min(rgba[o], rgba[o + 1], rgba[o + 2]) >= threshold;
+    if (Math.min(rgba[o], rgba[o + 1], rgba[o + 2]) < threshold) return false;
+    return maxNeighborStep(rgba, width, height, idx) <= edgeDelta;
   };
 
   for (let x = 0; x < width; x += 1) {
@@ -240,7 +259,7 @@ async function main() {
     try {
       const buffer = await fs.readFile(path.join(inDir, file));
       const { width, height, rgba } = decodePng(buffer);
-      removeBackground(width, height, rgba, THRESHOLD, FEATHER_BAND);
+      removeBackground(width, height, rgba, THRESHOLD, FEATHER_BAND, EDGE_DELTA);
       await fs.writeFile(path.join(outDir, file), encodePng(width, height, rgba));
       ok += 1;
       console.log(`ok    ${file}`);
