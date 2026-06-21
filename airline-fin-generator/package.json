@@ -1,0 +1,8 @@
+{
+  "name": "airline-fin-generator",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node src/generate-airline-fins.js"
+  }
+}
