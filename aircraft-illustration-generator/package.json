@@ -8,6 +8,6 @@
     "postprocess": "node src/postprocess-images.js"
   },
   "dependencies": {
-    "sharp": "^0.34.4"
+    "sharp": "^0.35.0"
   }
 }
