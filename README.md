@@ -1,4 +1,8 @@
-# flight-tracker-etl-tools
+<div align="center">
+
+[![flight-tracker-etl-tools][banner]][homepage]
+
+</div>
 
 Tooling for preparing and loading **reference data** into the
 [Flight Tracker](https://api.flights.barcz.me) production API (OpenAPI at
@@ -21,3 +25,6 @@ dependencies, and each does one job: build a dataset, or load a dataset.
 | [`aircraft-illustration-generator/`](aircraft-illustration-generator/README.md) | Generates clean, catalog-style side-view aircraft illustrations from a CSV of airframes using the OpenAI image API. |
 
 See each subdirectory's README for setup and usage.
+
+[banner]: .github/image/banner.png
+[homepage]: https://mypreflight.io
