@@ -1,0 +1,20 @@
+version: 2
+
+multi-ecosystem-groups:
+  dependencies:
+    schedule:
+      interval: daily
+
+updates:
+  - package-ecosystem: npm
+    directory: /aircraft-illustration-generator
+    patterns: ['*']
+    multi-ecosystem-group: dependencies
+  - package-ecosystem: npm
+    directory: /airline-fin-generator
+    patterns: ['*']
+    multi-ecosystem-group: dependencies
+  - package-ecosystem: npm
+    directory: /operator-list
+    patterns: ['*']
+    multi-ecosystem-group: dependencies
